@@ -1,46 +1,47 @@
-from selenium import webdriver
+import unittest
 from selenium.webdriver.common.by import By
 from selenium.webdriver.common.keys import Keys
+from selenium.webdriver.support.ui import WebDriverWait
+from selenium.webdriver.support import expected_conditions as EC
 import time
-from selenium import webdriver
-from selenium.webdriver.chrome.service import Service
-from selenium.webdriver.chrome.options import Options
-from selenium.webdriver.common.by import By
-from selenium.webdriver.common.keys import Keys
-import time
+import driver_config
+import config
 
-options = Options()
-options.add_argument("--no-sandbox")
-options.add_argument("--disable-dev-shm-usage")
-options.add_argument("--disable-gpu")  
-
-service = Service("C:\Program Files\Google\Chrome\Application\chromedriver-win64\chromedriver.exe")  
-driver = webdriver.Chrome(service=service, options=options)
-def scen_1():
-    try:
+class TestWikiSearch(unittest.TestCase):
+    def setUp(self):
+        """Настройка перед каждым тестом"""
+        self.driver = driver_config.get_driver()
+    
+    def test_search_wikipedia(self):
+        """Тест поиска на Wikipedia"""
+        start_time = time.time()
         
-        start_time = time.time() 
-
+        self.driver.get("https://www.wikipedia.org/")
+        self.driver.maximize_window()
+        time.sleep(1)
         
-        driver.get("https://www.wikipedia.org/")
-        driver.maximize_window()
-        time.sleep(1)  
-
-
-        search_box = driver.find_element(By.NAME, "search")
-
- 
+        search_box = WebDriverWait(self.driver, 10).until(
+            EC.presence_of_element_located((By.NAME, "search"))
+        )
+        
         search_box.send_keys("Солнечная система")
         search_box.send_keys(Keys.RETURN)
         
         time.sleep(2)
-
-    finally:
-        end_time = time.time() 
+        
+        end_time = time.time()
         execution_time = end_time - start_time
+        print(f"Время выполнения теста: {execution_time:.2f} секунд")
         
 
-        driver.quit()
-        return execution_time
+        WebDriverWait(self.driver, 10).until(
+            EC.presence_of_element_located((By.ID, "firstHeading"))
+        )
+        self.assertIn("Солнечная система", self.driver.title)
 
-print(f"Время выполнения теста: {scen_1():.2f} секунд")
+    def tearDown(self):
+        """Закрытие браузера после каждого теста"""
+        self.driver.quit()
+
+if __name__ == "__main__":
+    unittest.main()
